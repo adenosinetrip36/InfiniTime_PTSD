@@ -76,6 +76,8 @@ void HeartRateTask::Work() {
       if (lastBpm == 0 && bpm == 0) {
         controller.Update(Controllers::HeartRateController::States::NotEnoughData, 0);
       }
+      
+      //This can get used for HR processing
       if (bpm != 0) {
         lastBpm = bpm;
         controller.Update(Controllers::HeartRateController::States::Running, lastBpm);

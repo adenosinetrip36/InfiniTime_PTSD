@@ -208,7 +208,7 @@ void SystemTask::Work() {
           spiNorFlash.Wakeup();
 
           displayApp.PushMessage(Pinetime::Applications::Display::Messages::GoToRunning);
-          heartRateApp.PushMessage(Pinetime::Applications::HeartRateTask::Messages::WakeUp);
+          heartRateApp.PushMessage(Pinetime::Applications::HeartRateTask::Messages::StartMeasurement);
 
           if (bleController.IsRadioEnabled() && !bleController.IsConnected()) {
             nimbleController.RestartFastAdv();
