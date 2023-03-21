@@ -1,44 +1,42 @@
-#include "heartratetask/HeartRateTask.h"
+#include "HeartRateTask.h"
 #include <drivers/Hrs3300.h>
 #include <components/heartrate/HeartRateController.h>
 #include <nrf_log.h>
 
 using namespace Pinetime::Applications;
 
-HeartRateTask::HeartRateTask(Drivers::Hrs3300& heartRateSensor, Controllers::HeartRateController& controller)
-  : heartRateSensor {heartRateSensor}, controller {controller} {
+HeartRateTask::HeartRateTask(Drivers::Hrs3300 &heartRateSensor, Controllers::HeartRateController& controller) :
+      heartRateSensor{heartRateSensor},
+      controller{controller},
+      ppg{static_cast<float>(heartRateSensor.ReadHrs())} {
+  messageQueue = xQueueCreate(10, 1);
+  controller.SetHeartRateTask(this);
 }
 
 void HeartRateTask::Start() {
-  messageQueue = xQueueCreate(10, 1);
-  controller.SetHeartRateTask(this);
-
-  if (pdPASS != xTaskCreate(HeartRateTask::Process, "Heartrate", 500, this, 0, &taskHandle)) {
+  if (pdPASS != xTaskCreate(HeartRateTask::Process, "Heartrate", 500, this, 0, &taskHandle))
     APP_ERROR_HANDLER(NRF_ERROR_NO_MEM);
-  }
 }
 
-void HeartRateTask::Process(void* instance) {
-  auto* app = static_cast<HeartRateTask*>(instance);
+void HeartRateTask::Process(void *instance) {
+  auto *app = static_cast<HeartRateTask *>(instance);
   app->Work();
 }
 
 void HeartRateTask::Work() {
   int lastBpm = 0;
   while (true) {
-    auto delay = portMAX_DELAY;
-    if (state == States::Running) {
-      if (measurementStarted) {
-        delay = 40;
-      } else {
-        delay = 100;
-      }
-    } else {
-      delay = portMAX_DELAY;
-    }
-
     Messages msg;
-    if (xQueueReceive(messageQueue, &msg, delay) == pdTRUE) {
+    uint32_t delay;
+    if (state == States::Running) {
+      if (measurementStarted) delay = 40;
+      else delay = 100;
+    } 
+    
+    else
+      delay = portMAX_DELAY;
+
+    if (xQueueReceive(messageQueue, &msg, delay)) {
       switch (msg) {
         case Messages::GoToSleep:
           StopMeasurement();
@@ -46,23 +44,19 @@ void HeartRateTask::Work() {
           break;
         case Messages::WakeUp:
           state = States::Running;
-          if (measurementStarted) {
+          if(measurementStarted) {
             lastBpm = 0;
             StartMeasurement();
           }
           break;
         case Messages::StartMeasurement:
-          if (measurementStarted) {
-            break;
-          }
+          if(measurementStarted) break;
           lastBpm = 0;
           StartMeasurement();
           measurementStarted = true;
           break;
         case Messages::StopMeasurement:
-          if (!measurementStarted) {
-            break;
-          }
+          if(!measurementStarted) break;
           StopMeasurement();
           measurementStarted = false;
           break;
@@ -70,26 +64,38 @@ void HeartRateTask::Work() {
     }
 
     if (measurementStarted) {
-      ppg.Preprocess(static_cast<float>(heartRateSensor.ReadHrs()));
-      auto bpm = ppg.HeartRate();
+      auto hrs = heartRateSensor.ReadHrs();
+      ppg.Preprocess(hrs);
+      auto bpm = ppg.HeartRate(); //  HOLD UP
+//MAYBE THIS GUY WILL WORK
 
-      if (lastBpm == 0 && bpm == 0) {
-        controller.Update(Controllers::HeartRateController::States::NotEnoughData, 0);
-      }
-      
-      //This can get used for HR processing
-      if (bpm != 0) {
+      if (lastBpm == 0 && bpm == 0) controller.Update(Controllers::HeartRateController::States::NotEnoughData, 0);
+      if(bpm != 0) {
         lastBpm = bpm;
         controller.Update(Controllers::HeartRateController::States::Running, lastBpm);
+
+        for(uint8_t cnt; cnt < 15; cnt++){
+
+
+
+
+        }
+
+
+
+
+
+
       }
     }
   }
 }
-
+//This may be a good starting point for sending HR sooner
 void HeartRateTask::PushMessage(HeartRateTask::Messages msg) {
-  BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+  BaseType_t xHigherPriorityTaskWoken;
+  xHigherPriorityTaskWoken = pdFALSE;
   xQueueSendFromISR(messageQueue, &msg, &xHigherPriorityTaskWoken);
-  if (xHigherPriorityTaskWoken == pdTRUE) {
+  if (xHigherPriorityTaskWoken) {
     /* Actual macro used here is port specific. */
     // TODO : should I do something here?
   }
@@ -98,7 +104,7 @@ void HeartRateTask::PushMessage(HeartRateTask::Messages msg) {
 void HeartRateTask::StartMeasurement() {
   heartRateSensor.Enable();
   vTaskDelay(100);
-  ppg.SetOffset(heartRateSensor.ReadHrs());
+  ppg.SetOffset(static_cast<float>(heartRateSensor.ReadHrs()));
 }
 
 void HeartRateTask::StopMeasurement() {
