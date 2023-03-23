@@ -2,6 +2,7 @@
 #include <FreeRTOS.h>
 #include <task.h>
 #include <queue.h>
+#include <time.h>
 #include <components/heartrate/Ppg.h>
 
 namespace Pinetime {

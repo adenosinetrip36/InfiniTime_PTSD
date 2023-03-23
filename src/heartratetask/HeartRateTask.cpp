@@ -25,6 +25,15 @@ void HeartRateTask::Process(void *instance) {
 
 void HeartRateTask::Work() {
   int lastBpm = 0;
+  int trigger = 0;
+  int sum = 0;
+  
+  int lastTenHR[10];
+  int i = 0;
+
+
+
+
   while (true) {
     Messages msg;
     uint32_t delay;
@@ -74,12 +83,16 @@ void HeartRateTask::Work() {
         lastBpm = bpm;
         controller.Update(Controllers::HeartRateController::States::Running, lastBpm);
 
-        for(uint8_t cnt; cnt < 15; cnt++){
-
-
-
-
+        for(uint8_t cnt; cnt < 9; cnt++){
+          lastTenHR[cnt] = lastBpm;
         }
+
+
+        if ((lastBpm < 70) || (lastBpm > 90))
+          trigger = 1;
+        else
+          trigger = 0;
+
 
 
 
@@ -111,3 +124,4 @@ void HeartRateTask::StopMeasurement() {
   heartRateSensor.Disable();
   vTaskDelay(100);
 }
+
