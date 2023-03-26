@@ -56,13 +56,13 @@ int HeartRateService::OnHeartRateRequested(uint16_t attributeHandle, ble_gatt_ac
   return 0;
 }
 
-void HeartRateService::OnNewHeartRateValue(uint8_t heartRateValue,uint8_t ptsdDetect) {
+void HeartRateService::OnNewHeartRateValue(uint8_t heartRateValue) {
   if (!heartRateMeasurementNotificationEnable)
     return;
 
-  uint8_t HRbuffer[2]   = {0, heartRateValue}; // [0] = flags, [1] = hr value
-  uint8_t PTSDbuffer[2] = {0, ptsdDetect};
-  auto* om = ble_hs_mbuf_from_flat(HRbuffer, 2);
+  uint8_t ptsdTrig = ptsdTrigger(heartRateValue);
+  uint8_t PTSDbuffer[2] = {0, ptsdTrig}; // [0] = flags, [1] = hr value
+ 
   auto* pd = ble_hs_mbuf_from_flat(PTSDbuffer, 2);
 
   uint16_t connectionHandle = nimble.connHandle();
@@ -70,12 +70,8 @@ void HeartRateService::OnNewHeartRateValue(uint8_t heartRateValue,uint8_t ptsdDe
   if (connectionHandle == 0 || connectionHandle == BLE_HS_CONN_HANDLE_NONE) {
     return;
   }
-
-  ble_gattc_notify_custom(connectionHandle, heartRateMeasurementHandle, om);
   ble_gattc_notify_custom(connectionHandle, heartRateMeasurementHandle, pd);
 }
-
-
 
 void HeartRateService::SubscribeNotification(uint16_t attributeHandle) {
   if (attributeHandle == heartRateMeasurementHandle)
@@ -85,4 +81,41 @@ void HeartRateService::SubscribeNotification(uint16_t attributeHandle) {
 void HeartRateService::UnsubscribeNotification(uint16_t attributeHandle) {
   if (attributeHandle == heartRateMeasurementHandle)
     heartRateMeasurementNotificationEnable = false;
+}
+
+bool HeartRateService::ptsdTrigger(uint8_t heartRateValue){
+  uint8_t lastSevenHR[7];
+  uint8_t sum;
+  float HRmean, standDev, sumSquares, trigger;
+  uint8_t numb
+
+  for(uint8_t cnt; cnt < 7; cnt++)
+      lastSevenHR[cnt] = heartRateValue;
+
+  if(lastSevenHR[7] != 0){
+    for(uint8_t i; i < 7; i++){
+      sum += lastSevenHR[i];
+    }
+    HRmean = (float)sum / 7;
+
+    sum = 0;
+    for(uint8_t i; i < 7; i++){
+      sum += pow(lastSevenHR[i] - HRmean, 2);
+    }
+    sumSquares = (float)sum / 7;
+    standDev = ceil(sqrt(sumSquares));
+
+    if(standDev > 6)
+      trigger = 0.05;
+  }
+
+  if ((heartRateValue < 70) || (heartRateValue > 90)){
+      trigger = 0.2;
+  }
+
+  if(trigger >= 0.5){
+    return 1;
+  else
+    return 0;
+  }
 }

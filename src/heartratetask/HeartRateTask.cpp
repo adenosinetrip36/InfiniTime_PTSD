@@ -28,11 +28,7 @@ void HeartRateTask::Work() {
   int trigger = 0;
   int sum = 0;
   
-  int lastTenHR[10];
   int i = 0;
-
-
-
 
   while (true) {
     Messages msg;
@@ -75,35 +71,18 @@ void HeartRateTask::Work() {
     if (measurementStarted) {
       auto hrs = heartRateSensor.ReadHrs();
       ppg.Preprocess(hrs);
-      auto bpm = ppg.HeartRate(); //  HOLD UP
-//MAYBE THIS GUY WILL WORK
+      auto bpm = ppg.HeartRate();
+
 
       if (lastBpm == 0 && bpm == 0) controller.Update(Controllers::HeartRateController::States::NotEnoughData, 0);
       if(bpm != 0) {
         lastBpm = bpm;
         controller.Update(Controllers::HeartRateController::States::Running, lastBpm);
-
-        for(uint8_t cnt; cnt < 9; cnt++){
-          lastTenHR[cnt] = lastBpm;
-        }
-
-
-        if ((lastBpm < 70) || (lastBpm > 90))
-          trigger = 1;
-        else
-          trigger = 0;
-
-
-
-
-
-
-
       }
     }
   }
 }
-//This may be a good starting point for sending HR sooner
+
 void HeartRateTask::PushMessage(HeartRateTask::Messages msg) {
   BaseType_t xHigherPriorityTaskWoken;
   xHigherPriorityTaskWoken = pdFALSE;
