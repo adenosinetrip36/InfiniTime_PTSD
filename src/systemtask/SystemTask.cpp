@@ -237,8 +237,8 @@ void SystemTask::Work() {
           state = SystemTaskState::GoingToSleep; // Already set in PushMessage()
           NRF_LOG_INFO("[systemtask] Going to sleep");
           displayApp.PushMessage(Pinetime::Applications::Display::Messages::GoToSleep);
-          heartRateApp.PushMessage(Pinetime::Applications::HeartRateTask::Messages::GoToSleep);
           break;
+          
         case Messages::OnNewTime:
           displayApp.PushMessage(Pinetime::Applications::Display::Messages::RestoreBrightness);
           displayApp.PushMessage(Pinetime::Applications::Display::Messages::UpdateDateTime);
