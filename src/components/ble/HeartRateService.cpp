@@ -85,37 +85,34 @@ void HeartRateService::UnsubscribeNotification(uint16_t attributeHandle) {
 
 bool HeartRateService::ptsdTrigger(uint8_t heartRateValue){
   uint8_t lastSevenHR[7];
-  uint8_t sum;
+  uint16_t sum = 0, sum_temp = 0;
   float HRmean, standDev, sumSquares, trigger;
-  uint8_t numb
 
-  for(uint8_t cnt; cnt < 7; cnt++)
+  for(uint8_t cnt = 0; cnt < 7; cnt++)
       lastSevenHR[cnt] = heartRateValue;
 
-  if(lastSevenHR[7] != 0){
-    for(uint8_t i; i < 7; i++){
+  if(lastSevenHR[6] != 0){
+    for(uint8_t i = 0; i < 7; i++){
       sum += lastSevenHR[i];
     }
     HRmean = (float)sum / 7;
 
-    sum = 0;
-    for(uint8_t i; i < 7; i++){
-      sum += pow(lastSevenHR[i] - HRmean, 2);
+    for(uint8_t i = 0; i < 7; i++){
+      sum_temp += pow(lastSevenHR[i] - HRmean, 2);
     }
-    sumSquares = (float)sum / 7;
+    sumSquares = (float)sum_temp / 7;
     standDev = ceil(sqrt(sumSquares));
 
     if(standDev > 6)
       trigger = 0.05;
   }
 
-  if ((heartRateValue < 70) || (heartRateValue > 90)){
+  if ((heartRateValue < 70) || (heartRateValue > 90))
       trigger = 0.2;
-  }
+  
 
-  if(trigger >= 0.5){
+  if(trigger >= 0.5)
     return 1;
   else
     return 0;
-  }
 }

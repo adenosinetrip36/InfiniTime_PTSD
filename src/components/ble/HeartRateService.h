@@ -3,7 +3,7 @@
 #define max
 #include <host/ble_gap.h>
 #include <atomic>
-#include <cmath.h>
+#include <cmath>
 #undef max
 #undef min
 

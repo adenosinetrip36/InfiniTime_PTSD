@@ -7,8 +7,9 @@ using namespace Pinetime::Applications;
 
 HeartRateTask::HeartRateTask(Drivers::Hrs3300 &heartRateSensor, Controllers::HeartRateController& controller) :
       heartRateSensor{heartRateSensor},
-      controller{controller},
-      ppg{static_cast<float>(heartRateSensor.ReadHrs())} {
+      controller{controller}
+      //ppg{static_cast<float>(heartRateSensor.ReadHrs())} 
+      {
   messageQueue = xQueueCreate(10, 1);
   controller.SetHeartRateTask(this);
 }
@@ -25,10 +26,6 @@ void HeartRateTask::Process(void *instance) {
 
 void HeartRateTask::Work() {
   int lastBpm = 0;
-  int trigger = 0;
-  int sum = 0;
-  
-  int i = 0;
 
   while (true) {
     Messages msg;
