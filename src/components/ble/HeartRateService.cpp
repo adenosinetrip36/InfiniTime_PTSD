@@ -104,7 +104,7 @@ bool HeartRateService::ptsdTrigger(uint8_t heartRateValue){
     standDev = ceil(sqrt(sumSquares));
 
     if(standDev > 6)
-      trigger = 0.05;
+      trigger = 0.5;
   }
 
   if ((heartRateValue < 70) || (heartRateValue > 90))
