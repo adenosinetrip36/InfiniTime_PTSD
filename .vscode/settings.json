@@ -55,5 +55,6 @@
         "streambuf": "cpp",
         "cinttypes": "cpp",
         "typeinfo": "cpp"
-    }
+    },
+    "nrf-connect.toolchain.path": "PATH"
 }
