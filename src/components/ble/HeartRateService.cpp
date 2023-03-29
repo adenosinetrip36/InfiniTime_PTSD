@@ -59,8 +59,28 @@ int HeartRateService::OnHeartRateRequested(uint16_t attributeHandle, ble_gatt_ac
 void HeartRateService::OnNewHeartRateValue(uint8_t heartRateValue) {
   if (!heartRateMeasurementNotificationEnable)
     return;
+/*------------------------------------------------------------*/
+  //Array and for loop added for a test procedure of Dog 
+  //  vibration device to simulate multiple activations of HR 
+  //  protocol within a period of around 400 - 800 seconds
+  //  or 6 - 12 minutes
 
-  uint8_t ptsdTrig = ptsdTrigger(heartRateValue);
+  uint32_t ptsdTest[50] = {
+    1, 0, 0, 0, 0, 0, 1, 0, 1, 0,
+    0, 0, 0, 0, 0, 0, 1, 0, 0, 0,
+    0, 0, 1, 0, 0, 0, 1, 0, 0, 0,
+    0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
+    1, 0, 0, 0, 0, 0, 1, 0, 0, 0,
+  };
+
+  for(uint8_t cnt = 0; cnt < 50; cnt++){
+    uint8_t ptsdTrig = ptsdTest[cnt];
+  }
+/*------------------------------------------------------------*/
+/*------------------------------------------------------------*/
+//Original call of the ptsdTrigger function for the actual processing of HR data.
+//uint8_t ptsdTrig = ptsdTrigger(heartRateValue);
+/*------------------------------------------------------------*/
   uint8_t PTSDbuffer[2] = {0, ptsdTrig}; // [0] = flags, [1] = hr value
  
   auto* pd = ble_hs_mbuf_from_flat(PTSDbuffer, 2);
