@@ -10,12 +10,21 @@ constexpr ble_uuid16_t HeartRateService::heartRateMeasurementUuid;
 
 uint16_t arraycnt = 0;
 uint8_t ptsdTrig = 0;
-uint32_t ptsdTest[50] = {
+/*
+uint8_t ptsdTest[50] = {
   1, 0, 0, 0, 0, 0, 1, 0, 1, 0,
   0, 0, 0, 0, 0, 0, 1, 0, 0, 0,
   0, 0, 1, 0, 0, 0, 1, 0, 0, 0,
   0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
   1, 0, 0, 0, 0, 0, 1, 0, 0, 0,
+};
+*/
+uint8_t HRTestData[50] = {
+  80, 81, 80, 77, 72, 70, 71, 70, 72, 78,
+  86, 98,/*Trigger*/ 120, 120, 121, 122, 80, 90, 95, 82,
+  100, 110, 108, 102, 115, 130, 90, 92, 94, 90,
+  92, 94, 92, 90, 88, /*Trigger ends*/ 87, 89, 86, 87, 86,
+  86, 86, 86, 86, 86, 86, 86, 86, 86, 86,
 };
 
 namespace {
@@ -78,7 +87,7 @@ void HeartRateService::OnNewHeartRateValue(uint8_t heartRateValue) {
   //  protocol within a period of around 400 - 800 seconds
   //  or 6 - 12 minutes
 
-  ptsdTrig = ptsdTest[arraycnt];
+  ptsdTrig = ptsdTrigger(HRTestData[arraycnt]);
   arraycnt++;
 
   if(arraycnt == 50)
@@ -113,7 +122,7 @@ void HeartRateService::UnsubscribeNotification(uint16_t attributeHandle) {
 bool HeartRateService::ptsdTrigger(uint8_t heartRateValue){
   uint8_t lastSevenHR[7];
   uint16_t sum = 0, sum_temp = 0;
-  float HRmean, standDev, sumSquares, trigger;
+  float HRmean, standDev, sumSquares, trigger = 0;
 
   for(uint8_t cnt = 0; cnt < 7; cnt++)
       lastSevenHR[cnt] = heartRateValue;
@@ -130,14 +139,17 @@ bool HeartRateService::ptsdTrigger(uint8_t heartRateValue){
     sumSquares = (float)sum_temp / 7;
     standDev = ceil(sqrt(sumSquares));
 
-    if(standDev > 6)
+    if(standDev > 8)
       trigger = 0.5;
+    else if(standDev > 5)
+      trigger = 0.3;
+    else
+      trigger = trigger;
   }
 
-  if ((heartRateValue < 70) || (heartRateValue > 90))
+  if ((heartRateValue < 70) || (heartRateValue > 101))
       trigger = 0.2;
   
-
   if(trigger >= 0.5)
     return 1;
   else

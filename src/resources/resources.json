@@ -1,8 +1,8 @@
 {
     "resources": [
         {
-            "filename": "7segments_40.bin",
-            "path": "/fonts/7segments_40.bin"
+            "filename": "bebas.bin",
+            "path": "/fonts/bebas.bin"
         },
         {
             "filename": "lv_font_dots_40.bin",
@@ -13,12 +13,12 @@
             "path": "/fonts/teko.bin"
         },
         {
-            "filename": "bebas.bin",
-            "path": "/fonts/bebas.bin"
-        },
-        {
             "filename": "7segments_115.bin",
             "path": "/fonts/7segments_115.bin"
+        },
+        {
+            "filename": "7segments_40.bin",
+            "path": "/fonts/7segments_40.bin"
         },
         {
             "filename": "pine_small.bin",
