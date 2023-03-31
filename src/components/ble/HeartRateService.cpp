@@ -8,6 +8,16 @@ using namespace Pinetime::Controllers;
 constexpr ble_uuid16_t HeartRateService::heartRateServiceUuid;
 constexpr ble_uuid16_t HeartRateService::heartRateMeasurementUuid;
 
+uint16_t arraycnt = 0;
+uint8_t ptsdTrig = 0;
+uint32_t ptsdTest[50] = {
+  1, 0, 0, 0, 0, 0, 1, 0, 1, 0,
+  0, 0, 0, 0, 0, 0, 1, 0, 0, 0,
+  0, 0, 1, 0, 0, 0, 1, 0, 0, 0,
+  0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
+  1, 0, 0, 0, 0, 0, 1, 0, 0, 0,
+};
+
 namespace {
   int HeartRateServiceCallback(uint16_t /*conn_handle*/, uint16_t attr_handle, struct ble_gatt_access_ctxt* ctxt, void* arg) {
     auto* heartRateService = static_cast<HeartRateService*>(arg);
@@ -57,12 +67,29 @@ int HeartRateService::OnHeartRateRequested(uint16_t attributeHandle, ble_gatt_ac
 }
 
 void HeartRateService::OnNewHeartRateValue(uint8_t heartRateValue) {
+
+  (void)heartRateValue; //throws out actual HR value for testing
+
   if (!heartRateMeasurementNotificationEnable)
     return;
+/*------------------------------------------------------------*/
+  //Array and for loop added for a test procedure of Dog 
+  //  vibration device to simulate multiple activations of HR 
+  //  protocol within a period of around 400 - 800 seconds
+  //  or 6 - 12 minutes
 
-  uint8_t ptsdTrig = ptsdTrigger(heartRateValue);
+  ptsdTrig = ptsdTest[arraycnt];
+  arraycnt++;
+
+  if(arraycnt == 50)
+    arraycnt = 0;
+/*------------------------------------------------------------*/
+/*------------------------------------------------------------*/
+//Original call of the ptsdTrigger function for the actual processing of HR data.
+//uint8_t ptsdTrig = ptsdTrigger(heartRateValue);
+/*------------------------------------------------------------*/
   uint8_t PTSDbuffer[2] = {0, ptsdTrig}; // [0] = flags, [1] = hr value
- 
+
   auto* pd = ble_hs_mbuf_from_flat(PTSDbuffer, 2);
 
   uint16_t connectionHandle = nimble.connHandle();
