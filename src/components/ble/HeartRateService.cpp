@@ -8,24 +8,7 @@ using namespace Pinetime::Controllers;
 constexpr ble_uuid16_t HeartRateService::heartRateServiceUuid;
 constexpr ble_uuid16_t HeartRateService::heartRateMeasurementUuid;
 
-uint16_t arraycnt = 0;
 uint8_t ptsdTrig = 0;
-/*
-uint8_t ptsdTest[50] = {
-  1, 0, 0, 0, 0, 0, 1, 0, 1, 0,
-  0, 0, 0, 0, 0, 0, 1, 0, 0, 0,
-  0, 0, 1, 0, 0, 0, 1, 0, 0, 0,
-  0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
-  1, 0, 0, 0, 0, 0, 1, 0, 0, 0,
-};
-*/
-uint8_t HRTestData[50] = {
-  80, 81, 80, 77, 72, 70, 71, 70, 72, 78,
-  86, 98,/*Trigger*/ 120, 120, 121, 122, 80, 90, 95, 82,
-  100, 110, 108, 102, 115, 130, 90, 92, 94, 90,
-  92, 94, 92, 90, 88, /*Trigger ends*/ 87, 89, 86, 87, 86,
-  86, 86, 86, 86, 86, 86, 86, 86, 86, 86,
-};
 
 namespace {
   int HeartRateServiceCallback(uint16_t /*conn_handle*/, uint16_t attr_handle, struct ble_gatt_access_ctxt* ctxt, void* arg) {
@@ -77,8 +60,6 @@ int HeartRateService::OnHeartRateRequested(uint16_t attributeHandle, ble_gatt_ac
 
 void HeartRateService::OnNewHeartRateValue(uint8_t heartRateValue) {
 
-  (void)heartRateValue; //throws out actual HR value for testing
-
   if (!heartRateMeasurementNotificationEnable)
     return;
 /*------------------------------------------------------------*/
@@ -86,16 +67,10 @@ void HeartRateService::OnNewHeartRateValue(uint8_t heartRateValue) {
   //  vibration device to simulate multiple activations of HR 
   //  protocol within a period of around 400 - 800 seconds
   //  or 6 - 12 minutes
-
-  ptsdTrig = ptsdTrigger(HRTestData[arraycnt]);
-  arraycnt++;
-
-  if(arraycnt == 50)
-    arraycnt = 0;
 /*------------------------------------------------------------*/
 /*------------------------------------------------------------*/
 //Original call of the ptsdTrigger function for the actual processing of HR data.
-//uint8_t ptsdTrig = ptsdTrigger(heartRateValue);
+uint8_t ptsdTrig = ptsdTrigger(heartRateValue);
 /*------------------------------------------------------------*/
   uint8_t PTSDbuffer[2] = {0, ptsdTrig}; // [0] = flags, [1] = hr value
 
@@ -139,9 +114,9 @@ bool HeartRateService::ptsdTrigger(uint8_t heartRateValue){
     sumSquares = (float)sum_temp / 7;
     standDev = ceil(sqrt(sumSquares));
 
-    if(standDev > 8)
+    if(standDev > 6)
       trigger = 0.5;
-    else if(standDev > 5)
+    else if(standDev > 3)
       trigger = 0.3;
     else
       trigger = trigger;
