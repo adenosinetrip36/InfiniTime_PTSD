@@ -93,14 +93,28 @@ void HeartRateService::UnsubscribeNotification(uint16_t attributeHandle) {
   if (attributeHandle == heartRateMeasurementHandle)
     heartRateMeasurementNotificationEnable = false;
 }
+/*######################################################################
+|This algorithm was written by Curtis Daniel and Catriona Huber for    |                                                                   
+| for the Binghamton University ECD302 PTSD Detection Project.         |
+| The goal of this adaptation is to detect a PTSD episode within       |
+| 2 minutes of the symptoms building within the user.  This is         |
+| accomplished by taking the standard deviation of a moving average of |
+| the last 7 heart rate values, typically obtained every 8 seconds.    |
+| When the SD is above 6, the watch triggers the vibration device.     |
+######################################################################*/
 
 bool HeartRateService::ptsdTrigger(uint8_t heartRateValue){
   uint8_t lastSevenHR[7];
   uint16_t sum = 0, sum_temp = 0;
   float HRmean, standDev, sumSquares, trigger = 0;
 
+  //**This portion of code creates a moving window of 7 heart rate values 
+  // for calculations to be done on**
+
   for(uint8_t cnt = 0; cnt < 7; cnt++)
       lastSevenHR[cnt] = heartRateValue;
+
+  //**This portion of code calculates the Standard Deviation of the data**
 
   if(lastSevenHR[6] != 0){
     for(uint8_t i = 0; i < 7; i++){
@@ -114,6 +128,8 @@ bool HeartRateService::ptsdTrigger(uint8_t heartRateValue){
     sumSquares = (float)sum_temp / 7;
     standDev = ceil(sqrt(sumSquares));
 
+  //**This portion of code calcuates a weighted trigger value based on heart rate SD**
+  
     if(standDev > 6)
       trigger = 0.5;
     else if(standDev > 3)
@@ -122,9 +138,15 @@ bool HeartRateService::ptsdTrigger(uint8_t heartRateValue){
       trigger = trigger;
   }
 
+  //**This portion of code calculates a weighted trigger value based on the heart rate, as you can see 
+  // bradycardia and tachycardia carries less weight that heart rate variability**
+
   if ((heartRateValue < 70) || (heartRateValue > 101))
       trigger = 0.2;
-  
+      
+  //**This portion of code logically determines whether a PTSD episode is indicated, and outputs the 
+  // according bool value to the vibration device to receive**
+
   if(trigger >= 0.5)
     return 1;
   else
